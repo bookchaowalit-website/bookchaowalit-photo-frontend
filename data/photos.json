@@ -1,0 +1,6 @@
+{
+  "photos": [
+    {"id": "1", "title": "Sunset", "album": "Nature", "location": "Beach", "url": "/photos/sunset.jpg"},
+    {"id": "2", "title": "City Lights", "album": "Urban", "location": "Downtown", "url": "/photos/city.jpg"}
+  ]
+}
