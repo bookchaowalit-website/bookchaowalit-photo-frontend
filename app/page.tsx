@@ -1,136 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-
-function Shell({
-  title,
-  subtitle,
-  badge = "Portfolio demo · local-only",
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  badge?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-black dark:text-zinc-100">
-      <div className="mx-auto max-w-6xl px-4 py-10">
-        <header className="mb-8">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{badge}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{title}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">{subtitle}</p>
-        </header>
-        {children}
-        <footer className="mt-10 border-t border-zinc-200 pt-4 text-xs text-zinc-500 dark:border-zinc-800">
-          Honest demo: no multi-tenant backend. State (if any) stays in this browser.
-        </footer>
-      </div>
-    </div>
-  );
-}
-
-function Button({
-  children,
-  onClick,
-  variant = "primary",
-  disabled,
-  type = "button",
-  className = "",
-}: {
-  children: ReactNode;
-  onClick?: () => void;
-  variant?: "primary" | "secondary" | "ghost" | "danger";
-  disabled?: boolean;
-  type?: "button" | "submit";
-  className?: string;
-}) {
-  const base =
-    "inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition disabled:opacity-50 " +
-    className;
-  const styles =
-    variant === "primary"
-      ? "bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900"
-      : variant === "secondary"
-        ? "bg-white text-zinc-900 ring-1 ring-zinc-200 hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-zinc-700"
-        : variant === "danger"
-          ? "bg-red-600 text-white hover:bg-red-500"
-          : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900";
-  return (
-    <button type={type} disabled={disabled} onClick={onClick} className={`${base} ${styles}`}>
-      {children}
-    </button>
-  );
-}
-
-const inputClass =
-  "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950";
-
-function useLocalStorage<T>(key: string, initial: T) {
-  const [value, setValue] = useState<T>(initial);
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw != null) setValue(JSON.parse(raw) as T);
-    } catch {
-      /* ignore */
-    }
-    setReady(true);
-  }, [key]);
-  useEffect(() => {
-    if (!ready) return;
-    localStorage.setItem(key, JSON.stringify(value));
-  }, [key, value, ready]);
-  return [value, setValue] as const;
-}
-
-function uid() {
-  return crypto.randomUUID();
-}
-
-async function copyText(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
+import { useMemo, useState } from "react";
 
 type Item = { id: string; title: string; category: string; summary: string; meta?: string };
-const ITEMS: Item[] = [{"id": "1", "title": "Bangkok skyline", "category": "Travel", "summary": "Golden hour rooftop.", "meta": "2026"}];
-const CATS = ["Travel", "Work"];
+const ITEMS: Item[] = [{ id: "1", title: "Bangkok skyline", category: "Travel", summary: "Golden hour rooftop.", meta: "2026" }];
+const CATEGORIES = ["All", "Travel", "Work"];
+
+function SkylineProof() { return <svg viewBox="0 0 900 540" role="img" aria-label="Authored line drawing of a Bangkok skyline at golden hour"><rect width="900" height="540" fill="#263029" /><path d="M0 392h900" stroke="#d9de66" strokeWidth="2" opacity=".7" /><path d="M44 392V282h42v110m10 0V238h58v154m15 0V303h34v89m22 0V184h74v208m18 0V266h45v126m18 0V220h54v172m18 0V291h31v101m16 0V166h83v226m17 0V247h52v145m14 0V281h77v111m15 0V210h44v182m18 0V257h63v135" fill="none" stroke="#f1eadb" strokeWidth="4" /><path d="M0 444c180-28 300-10 450 5s274 15 450-12" fill="none" stroke="#8c9683" strokeWidth="2" /><circle cx="710" cy="118" r="45" fill="#d9de66" opacity=".9" /><g stroke="#8c9683" strokeWidth="1" opacity=".55">{Array.from({ length: 7 }, (_, i) => <path key={i} d={`M${30 + i * 125} 42v452`} />)}</g></svg>; }
 
 export default function Home() {
-  const [q, setQ] = useState("");
-  const [cat, setCat] = useState("All");
-  const list = ITEMS.filter(
-    (i) =>
-      (cat === "All" || i.category === cat) &&
-      (i.title + i.summary + i.category).toLowerCase().includes(q.toLowerCase())
-  );
-  return (
-    <Shell title="Photo Gallery" subtitle="Album grid with captions.">
-      <div className="mb-4 flex flex-wrap gap-2">
-        <input className={`${inputClass} max-w-sm`} placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
-        {["All", ...CATS].map((c) => (
-          <Button key={c} variant={cat === c ? "primary" : "secondary"} onClick={() => setCat(c)}>
-            {c}
-          </Button>
-        ))}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((i) => (
-          <article key={i.id} className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="text-xs uppercase tracking-wide text-zinc-500">{i.category}</div>
-            <h2 className="mt-1 font-medium">{i.title}</h2>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{i.summary}</p>
-            {i.meta ? <p className="mt-3 text-xs text-zinc-500">{i.meta}</p> : null}
-          </article>
-        ))}
-      </div>
-    </Shell>
-  );
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("All");
+  const list = useMemo(() => ITEMS.filter((item) => (category === "All" || item.category === category) && `${item.title} ${item.summary} ${item.category}`.toLowerCase().includes(query.toLowerCase())), [category, query]);
+  return <div className="darkroom"><main className="photo-shell"><nav className="photo-nav"><span className="photo-wordmark">PHOTO / CONTACT SHEET</span><span>Field archive · proof scale</span></nav><header className="photo-hero"><div><h1>Hold the light long enough to remember.</h1><p>A visual notebook for scenes, places, and fragments worth keeping. The archive is intentionally small while its source material is still being collected.</p></div><div className="archive-meta"><strong>{ITEMS.length}</strong> verified frame<br />{CATEGORIES.length - 1} shelves in the index</div></header><section className="archive-tools" aria-label="Photo archive filters"><span className="filter-label">Archive / browse</span><input className="search-field" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search frames" aria-label="Search frames" /><div className="filter-tabs">{CATEGORIES.map((item) => <button key={item} type="button" className={`filter-tab ${category === item ? "is-active" : ""}`} onClick={() => setCategory(item)}>{item}{item === "Work" ? " · empty" : ""}</button>)}</div></section>{list.length ? <section className="contact-sheet" aria-label="Photo proof sheet">{list.map((item) => <div className="proof-frame" key={item.id}><div className="proof-image"><SkylineProof /></div><div className="proof-caption"><span className="proof-label">{item.category} / {item.meta}</span><h2>{item.title}</h2><p>{item.summary}</p><dl><div><dt>Status</dt><dd>Verified metadata</dd></div><div><dt>Image asset</dt><dd>Not attached</dd></div></dl></div></div>)}</section> : <p className="empty-archive">No frames match this shelf yet. “Work” is an intentional empty category until a verified image is added.</p>}<footer className="photo-footer">The skyline is an authored proof drawing because this portfolio repository currently has no attached photo asset. It is not presented as a documentary photograph.</footer></main></div>;
 }
